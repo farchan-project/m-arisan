@@ -1,4 +1,4 @@
-const CACHE_NAME = 'marisan-emerald-v8';
+const CACHE_NAME = 'arisan-ladarua-v11';
 const urlsToCache = ['./', './index.html', './app.js', './manifest.json', './logo.png'];
 
 self.addEventListener('install', event => {
