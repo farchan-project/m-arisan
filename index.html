@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M-Arisan Emerald</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        /* ================= THEME VARIABLES ================= */
+        :root {
+            --primary: #0D9488; --primary-dark: #0F766E; --secondary: #F59E0B;
+            --bg-app: #F0FDF4; --bg-card: #FFFFFF; --text-main: #1F2937; --text-muted: #6B7280;
+            --border-color: #E5E7EB; --success: #10B981; --danger: #EF4444;
+            --shadow-sm: 0 2px 5px rgba(0,0,0,0.05); --shadow-md: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* Dark Mode Setup */
+        body.dark-mode {
+            --bg-app: #111827; --bg-card: #1F2937; --text-main: #F9FAFB; --text-muted: #9CA3AF;
+            --border-color: #374151; --shadow-md: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        /* ================= BASE STYLES (Android First) ================= */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Roboto', 'Segoe UI', sans-serif; margin: 0; background: var(--bg-app); color: var(--text-main); overflow-x: hidden; transition: background 0.3s; }
+
+        /* APP BAR */
+        .app-bar { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: fixed; top: 0; width: 100%; z-index: 50; box-shadow: var(--shadow-sm); }
+        .app-bar-left { display: flex; align-items: center; gap: 15px; }
+        .menu-btn { background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 8px 12px; border-radius: 8px; }
+        .app-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        .app-logo { width: 28px; height: 28px; border-radius: 8px; background: white; padding: 2px; }
+        .theme-toggle { background: transparent; border: none; font-size: 1.4rem; color: white; cursor: pointer; }
+
+        /* DRAWER */
+        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99; display: none; opacity: 0; transition: 0.3s; }
+        .drawer { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--bg-card); z-index: 100; transition: left 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        .drawer.open { left: 0; }
+        .drawer-header { background: var(--primary); color: white; padding: 30px 20px; }
+        .drawer-header h2 { margin: 0 0 5px; font-size: 1.4rem; }
+        .drawer-header p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
+        .drawer-menu { list-style: none; padding: 10px; margin: 0; overflow-y: auto; flex-grow: 1; }
+        .drawer-menu li { padding: 15px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 10px; margin-bottom: 5px; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .drawer-menu li:active { background: var(--bg-app); transform: scale(0.98); }
+        .drawer-menu li.active-menu { color: var(--primary); background: #CCFBF1; }
+        body.dark-mode .drawer-menu li.active-menu { background: #134E4A; color: #5EEAD4; }
+
+        /* MAIN CONTENT */
+        .main-content { padding: 80px 15px 90px; min-height: 100vh; max-width: 800px; margin: auto; }
+        .screen { display: none; animation: fadeIn 0.3s; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CARDS */
+        .card { background: var(--bg-card); padding: 20px; border-radius: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); margin-bottom: 15px; }
+        .card-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 15px; color: var(--primary); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+
+        /* FORMS */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; }
+        input, select { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 1rem; background: var(--bg-app); color: var(--text-main); outline: none; }
+        input:focus, select:focus { border-color: var(--primary); }
+
+        /* BUTTONS */
+        button { font-family: inherit; cursor: pointer; }
+        .btn-primary { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-danger { background: var(--danger); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; }
+        .btn-wa { background: #25D366; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 10px; }
+        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--secondary); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: var(--shadow-md); border: none; z-index: 40; }
+        .fab:active { transform: scale(0.9); }
+
+        /* LIST ITEMS (CLICKABLE) */
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-card); margin-bottom: 10px; transition: 0.2s; cursor: pointer; }
+        .list-item:active { background: var(--bg-app); transform: scale(0.98); }
+        .list-info h4 { margin: 0 0 5px; font-size: 1.05rem; color: var(--text-main); }
+        .list-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+        .amount { font-weight: bold; font-size: 1.1rem; }
+        .badge { background: #E0F2FE; color: #0284C7; padding: 4px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; display: inline-block; margin-top: 5px; }
+
+        /* CUSTOM SELECT */
+        .custom-select { position: relative; width: 100%; }
+        .cs-display { padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-app); color: var(--text-main); display: flex; justify-content: space-between; align-items: center; font-weight: 600; cursor: pointer; }
+        .cs-dropdown { position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow-md); z-index: 20; display: none; margin-top: 5px; }
+        .cs-dropdown.open { display: block; }
+        .cs-search { padding: 12px; width: calc(100% - 20px); margin: 10px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .cs-list { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
+        .cs-list li { padding: 12px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+        .cs-list li:active { background: var(--primary); color: white; }
+
+        /* MODALS (BOTTOM SHEET FOR ANDROID) */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: flex-end; justify-content: center; backdrop-filter: blur(2px); }
+        .modal-content { background: var(--bg-card); width: 100%; max-width: 600px; border-radius: 24px 24px 0 0; padding: 30px 20px 40px; box-sizing: border-box; animation: slideUpSheet 0.3s; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-content::before { content: ''; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 50px; height: 5px; background: var(--border-color); border-radius: 5px; }
+        @keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* WHEEL */
+        .wheel-wrapper { position: relative; width: 300px; height: 300px; margin: 20px auto; }
+        canvas { width: 100%; height: 100%; border-radius: 50%; border: 6px solid var(--bg-card); box-shadow: var(--shadow-md); }
+        .wheel-pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 35px solid var(--secondary); z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+
+        .empty-state { text-align: center; padding: 30px 10px; color: var(--text-muted); }
+
+        body.is-logged-out .app-bar, body.is-logged-out .drawer, body.is-logged-out .fab { display: none !important; }
+        body.is-logged-out .main-content { display: flex; align-items: center; min-height: 100vh; padding: 20px; }
+
+        /* Desktop tweaks */
+        @media (min-width: 768px) {
+            body:not(.is-logged-out) .drawer { left: 0; }
+            body:not(.is-logged-out) .app-bar { width: calc(100% - 280px); left: 280px; }
+            body:not(.is-logged-out) .main-content { margin-left: 280px; }
+            body:not(.is-logged-out) .menu-btn { display: none; }
+            .modal { align-items: center; padding: 20px; }
+            .modal-content { border-radius: 24px; padding: 30px; }
+            .modal-content::before { display: none; }
+            .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        }
+    </style>
+</head>
+<body class="is-logged-out">
+
+<!-- APP BAR -->
+<div class="app-bar" id="app-bar">
+    <div class="app-bar-left">
+        <button class="menu-btn" onclick="toggleDrawer()">☰</button>
+        <div class="app-title"><img src="logo.png" class="app-logo" onerror="this.style.display='none'"> M-Arisan</div>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+<div class="drawer" id="drawer">
+    <div class="drawer-header">
+        <h2>M-Arisan</h2><p id="user-name-drawer">Loading...</p>
+    </div>
+    <ul class="drawer-menu" id="menu-admin" style="display: none;">
+        <li id="m-dash" onclick="navTo('s-dash', 'Dashboard', 'm-dash')">📊 Dashboard Analitik</li>
+        <li id="m-setoran" onclick="navTo('s-setoran', 'Setoran Arisan', 'm-setoran')">💰 Setoran Tagihan</li>
+        <li id="m-putaran" onclick="navTo('s-putaran', 'Kelola Putaran', 'm-putaran')">📅 Putaran Arisan</li>
+        <li id="m-peserta" onclick="navTo('s-peserta', 'Kelola Peserta', 'm-peserta')">👥 Daftar Anggota</li>
+        <li id="m-log" onclick="navTo('s-log', 'Buku Kas', 'm-log')">📜 Laporan Kas</li>
+        <li id="m-undi" onclick="navTo('s-undi', 'Roda Undian', 'm-undi')">🎲 Roda Undian</li>
+        <li onclick="logout()" style="color: var(--danger); margin-top: 20px;">🚪 Keluar Akun</li>
+    </ul>
+    <ul class="drawer-menu" id="menu-user" style="display: none;">
+        <li id="u-dash" onclick="navTo('s-user-dash', 'Beranda', 'u-dash')">🏠 Beranda</li>
+        <li onclick="bukaModalProfil()">👤 Pengaturan Profil</li>
+        <li onclick="logout()" style="color: var(--danger); margin-top: 20px;">🚪 Keluar Akun</li>
+    </ul>
+</div>
+
+<div class="main-content">
+    <!-- LOGIN -->
+    <div id="s-login" class="screen active">
+        <div class="card" style="width: 100%; text-align: center; padding: 40px 20px;">
+            <img src="logo.png" style="width: 80px; border-radius: 16px; margin-bottom: 10px;" onerror="this.style.display='none'">
+            <h2 style="color: var(--primary); margin: 0 0 5px;">Login M-Arisan</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">Sistem Finansial Keluarga</p>
+
+            <form id="form-login" style="text-align: left;">
+                <div class="form-group"><label>Username / No. HP</label><input type="text" id="login-telp" required></div>
+                <div class="form-group"><label>PIN Rahasia</label><input type="password" id="login-pin" required></div>
+                <button type="submit" class="btn-primary" style="margin-top: 10px;">Masuk Aplikasi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= ADMIN SCREENS ================= -->
+
+    <!-- DASHBOARD -->
+    <div id="s-dash" class="screen">
+        <div class="grid-2">
+            <div class="card" style="background: var(--primary); color: white; border: none;">
+                <p style="margin: 0 0 5px; opacity: 0.8; font-size: 0.85rem;">Total Kas Keseluruhan</p>
+                <h2 style="margin: 0; font-size: 1.8rem;" id="dash-total-uang">Rp 0</h2>
+            </div>
+            <div class="card" style="background: var(--secondary); color: white; border: none;">
+                <p style="margin: 0 0 5px; opacity: 0.8; font-size: 0.85rem;">Anggota Aktif</p>
+                <h2 style="margin: 0; font-size: 1.8rem;" id="dash-total-peserta">0</h2>
+            </div>
+        </div>
+        <div class="card" style="border-left: 5px solid var(--success);">
+            <p style="margin: 0 0 5px; color: var(--text-muted); font-weight: bold;">🏆 Pemenang Terakhir</p>
+            <h1 style="color: var(--success); margin: 0; font-size: 1.6rem;" id="dash-last-winner">-</h1>
+            <p style="margin: 5px 0 0; color: var(--text-muted); font-size: 0.85rem;" id="dash-last-round"></p>
+        </div>
+    </div>
+
+    <!-- SETORAN -->
+    <div id="s-setoran" class="screen">
+        <div class="card" style="background: var(--bg-card); border-top: 4px solid var(--primary);">
+            <label>Filter Putaran:</label>
+            <div class="custom-select" id="cs-filter-putaran">
+                <div class="cs-display" onclick="toggleCS('cs-filter-putaran')"><span class="cs-text">Semua Putaran</span> ▾</div>
+                <div class="cs-dropdown"><input type="text" class="cs-search" placeholder="Cari..."><ul class="cs-list"></ul></div>
+                <input type="hidden" id="select-putaran-setoran" value="ALL">
+            </div>
+
+            <div style="margin-top: 20px;">
+                <p style="margin: 0 0 5px; color: var(--text-muted); font-size: 0.85rem;">Terkumpul Sesuai Filter</p>
+                <h1 style="margin: 0; color: var(--primary); font-size: 2rem;" id="total-terkumpul-ui">Rp 0</h1>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="form-group">
+                <label>Cari Anggota:</label>
+                <div class="custom-select" id="cs-search-peserta">
+                    <div class="cs-display" onclick="toggleCS('cs-search-peserta')"><span class="cs-text">Semua Anggota</span> ▾</div>
+                    <div class="cs-dropdown"><input type="text" class="cs-search" placeholder="Cari..."><ul class="cs-list"></ul></div>
+                    <input type="hidden" id="search-setoran-dropdown" value="">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Status Bayar:</label>
+                <select id="sort-setoran">
+                    <option value="all">Tampilkan Semua</option>
+                    <option value="paid">Sudah Lunas</option>
+                    <option value="unpaid">Belum Bayar</option>
+                </select>
+            </div>
+            <button class="btn-wa" onclick="shareLaporanWA()">📱 Kirim Tagihan via WA</button>
+        </div>
+
+        <h4 style="margin: 20px 0 10px; color: var(--text-muted);">Daftar Tagihan (Klik untuk input)</h4>
+        <div id="list-setoran-peserta"></div>
+    </div>
+
+    <!-- PUTARAN -->
+    <div id="s-putaran" class="screen">
+        <div class="card" style="background: #FEF2F2; border-color: #FCA5A5;">
+            <p style="margin: 0 0 10px; color: #991B1B; font-weight: bold;">Hapus seluruh putaran akan mereset arisan.</p>
+            <button class="btn-danger" onclick="hapusSemuaPutaran()">Reset Semua Putaran</button>
+        </div>
+        <h4 style="margin: 20px 0 10px; color: var(--text-muted);">Daftar Putaran (Klik untuk Edit/Hapus)</h4>
+        <div id="list-putaran"></div>
+        <button class="fab" onclick="bukaModalPutaran()">+</button>
+    </div>
+
+    <!-- PESERTA -->
+    <div id="s-peserta" class="screen">
+        <h4 style="margin: 10px 0; color: var(--text-muted);">Anggota (Klik untuk Edit/Hapus)</h4>
+        <div id="list-peserta"></div>
+        <button class="fab" onclick="bukaModalPeserta(null)">+</button>
+    </div>
+
+    <!-- LOG KAS -->
+    <div id="s-log" class="screen">
+        <div class="card grid-2" style="padding: 20px 15px;">
+            <div style="text-align: center;"><label>Masuk</label><h3 style="color: var(--success); margin: 5px 0;">+<span id="kas-in">0</span></h3></div>
+            <div style="text-align: center;"><label>Keluar</label><h3 style="color: var(--danger); margin: 5px 0;">-<span id="kas-out">0</span></h3></div>
+            <div style="grid-column: span 2; text-align: center; border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 5px;">
+                <label>Saldo Tersisa</label><h1 style="color: var(--primary); margin: 5px 0;" id="kas-saldo">Rp 0</h1>
+            </div>
+        </div>
+        <div class="card">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <select id="filter-log-putaran" style="flex:1"><option value="ALL">Semua Putaran</option></select>
+                <select id="filter-log-peserta" style="flex:1"><option value="ALL">Semua Peserta</option></select>
+            </div>
+            <button class="btn-primary" style="background: var(--text-main); margin-bottom: 20px;" onclick="cetakLaporan()">🖨️ Cetak Buku Kas</button>
+            <h4 style="margin: 0 0 10px; color: var(--text-muted);">Riwayat (Klik untuk Edit/Hapus)</h4>
+            <div id="list-log-kas"></div>
+        </div>
+        <button class="fab" onclick="bukaModalTambahTransaksi()" style="background: var(--danger); font-size: 20px;">💸</button>
+    </div>
+
+    <!-- UNDIAN -->
+    <div id="s-undi" class="screen">
+        <div class="card" style="text-align: center;">
+            <label style="text-align: left; display: block;">Pilih Putaran:</label>
+            <select id="select-putaran-undi" style="margin-bottom: 20px; font-weight: bold; border-color: var(--primary);"></select>
+
+            <div class="wheel-wrapper">
+                <div class="wheel-pointer"></div>
+                <canvas id="wheelCanvas"></canvas>
+            </div>
+
+            <button id="btn-spin" class="btn-primary" style="font-size: 1.2rem; padding: 18px; margin-top: 20px;">🎲 MULAI UNDI</button>
+        </div>
+    </div>
+
+    <!-- ================= USER SCREENS ================= -->
+    <div id="s-user-dash" class="screen">
+        <div class="card" style="text-align: center; background: var(--primary); color: white; border: none;">
+            <img id="u-foto-profil" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid white; margin: 0 auto 10px; display: block;" onerror="this.style.display='none'">
+            <h3 style="margin: 0; font-size: 1.4rem;" id="u-nama-teks">Halo, -</h3>
+            <p style="margin: 15px 0 5px; font-size: 0.85rem; opacity: 0.9;">Total Setoran Anda</p>
+            <h1 id="u-total-bayar" style="margin: 0; font-size: 2.2rem;">Rp 0</h1>
+        </div>
+        <div class="card" style="border-left: 5px solid var(--secondary);">
+            <h4 style="margin: 0 0 5px; color: var(--secondary);">🏆 Pemenang Terakhir</h4>
+            <p style="margin: 0; font-weight: bold; font-size: 1.1rem; color: var(--text-main);" id="u-info-pemenang">-</p>
+        </div>
+        <div class="card">
+            <h4 style="margin: 0 0 15px;">Riwayat Setoran Saya</h4>
+            <div id="list-riwayat-user"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= FULL CRUD MODALS (BOTTOM SHEETS) ================= -->
+
+<!-- Modal CREATE/EDIT Putaran -->
+<div class="modal" id="modal-putaran" onclick="if(event.target===this) tutupModal()">
+    <div class="modal-content">
+        <h2 style="color: var(--primary); margin: 0 0 20px;" id="title-modal-putaran">Tambah Putaran</h2>
+        <form id="form-putaran">
+            <input type="hidden" id="eput-id">
+            <div class="form-group"><label>Nama Putaran (Misal: Bulan & Tahun)</label><input type="text" id="eput-nama" required></div>
+            <button type="submit" class="btn-primary">Simpan Data</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal DETAIL/ACTION Putaran -->
+<div class="modal" id="modal-detail-putaran" onclick="if(event.target===this) tutupModal()">
+    <div class="modal-content" style="text-align: center;">
+        <h2 style="color: var(--primary); margin: 0 0 5px;">Menu Putaran</h2>
+        <p id="det-putaran-nama" style="font-size: 1.2rem; font-weight: bold; margin: 0 0 25px;"></p>
+        <input type="hidden" id="det-putaran-id">
+        <div class="grid-2">
+            <button class="btn-primary" style="background: var(--text-muted);" onclick="siapkanEditPutaran()">✏️ Edit Nama</button>
+            <button class="btn-danger" onclick="aksiHapusPutaran()">🗑️ Hapus Putaran</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal CREATE/EDIT Peserta -->
+<div class="modal" id="modal-peserta" onclick="if(event.target===this) tutupModal()">
+    <div class="modal-content">
+        <h2 style="color: var(--primary); margin: 0 0 20px;" id="title-modal-peserta">Tambah Peserta</h2>
+        <form id="form-peserta">
+            <input type="hidden" id="ep-id">
+            <div class="form-group"><label>Nama Lengkap</label><input type="text" id="ep-nama" required></div>
+            <div class="form-group"><label>Username / No. HP</label><input type="text" id="ep-telp" required></div>
+            <div class="form-group"><label>PIN Login</label><input type="text" id="ep-pin" required></div>
+            <div class="form-group">
+                <label>Status Undian Roda</label>
+                <select id="ep-menang"><option value="false">Ikut Diundi</option><option value="true">Selesai (Sudah Menang)</option></select>
+            </div>
+            <button type="submit" class="btn-primary">Simpan Anggota</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal DETAIL/ACTION Peserta -->
+<div class="modal" id="modal-detail-peserta" onclick="if(event.target===this) tutupModal()">
+    <div class="modal-content">
+        <h2 style="color: var(--primary); margin: 0 0 5px; text-align: center;">Info Anggota</h2>
+        <h3 id="det-peserta-nama" style="margin: 0 0 20px; font-size: 1.4rem; text-align: center;"></h3>
+        <input type="hidden" id="det-peserta-id">
+
+        <div class="grid-2" style="margin-bottom: 20px;">
+            <button class="btn-primary" style="background: var(--text-muted);" onclick="siapkanEditPeserta()">✏️ Edit Info</button>
+            <button class="btn-danger" onclick="aksiHapusPeserta()">🗑️ Hapus Permanen</button>
+        </div>
+
+        <h4 style="margin: 0 0 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">Riwayat Setoran:</h4>
+        <div id="list-detail-bayar" style="margin-bottom: 20px; max-height: 30vh; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<!-- Modal CREATE Transaksi (Tarik Kas Manual) -->
+<div class="modal" id="modal-tarik-kas" onclick="if(event.target===this) tutupModal()">
+    <div class="modal-content">
+        <h2 style="color: var(--danger); margin: 0 0 20px;">Catat Uang Keluar</h2>
+        <form id="form-tarik-kas">
+            <div class="form-group"><label>Nominal Keluar (Rp)</label><input type="number" id="tk-nominal" required></div>
+            <div class="form-group"><label>Keterangan</label><input type="text" id="tk-ket" required></div>
+            <button type="submit" class="btn-danger">Simpan Pengeluaran</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal DETAIL/EDIT/DELETE Transaksi (Log Kas) -->
+<div class="modal" id="modal-detail-transaksi" onclick="if(event.target===this) tutupModal()">
+    <div class="modal-content">
+        <h2 style="color: var(--primary); margin: 0 0 20px;">Edit Data Transaksi</h2>
+        <form id="form-edit-transaksi">
+            <input type="hidden" id="et-id">
+            <div class="form-group"><label>Keterangan / Nama Peserta</label><input type="text" id="et-ket" readonly style="background: #e9ecef;"></div>
+            <div class="form-group"><label>Nominal (Rp)</label><input type="number" id="et-nominal" required></div>
+            <div class="form-group"><label>Ubah Tanggal Transaksi</label><input type="date" id="et-tanggal" required></div>
+
+            <div class="grid-2" style="margin-top: 25px;">
+                <button type="submit" class="btn-primary">💾 Simpan Edit</button>
+                <button type="button" class="btn-danger" onclick="aksiHapusTransaksi()">🗑️ Hapus Transaksi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Setoran (Input Berformat Rupiah) -->
+<div class="modal" id="modal-bayar" onclick="if(event.target===this) tutupModal()">
+    <div class="modal-content">
+        <h2 style="color: var(--primary); margin: 0 0 5px;">Input Setoran</h2>
+        <p id="mb-nama" style="font-size: 1.2rem; font-weight: bold; margin: 0 0 20px;"></p>
+        <form id="form-submit-bayar">
+            <input type="hidden" id="mb-id-peserta"><input type="hidden" id="mb-nama-peserta">
+            <div class="form-group">
+                <label>Nominal Pembayaran</label>
+                <input type="text" id="mb-nominal-rp" placeholder="Rp 0" required style="font-size: 1.8rem; font-weight: bold; color: var(--success); height: 60px; text-align: center;">
+            </div>
+            <button type="submit" class="btn-primary">Simpan Transaksi</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Pemenang Undian -->
+<div class="modal" id="modal-pemenang">
+    <div class="modal-content" style="text-align: center;">
+        <div style="font-size: 50px; animation: bounce 1.5s infinite;">🏆</div>
+        <h2 style="color: var(--secondary); margin: 10px 0 0;">PEMENANG!</h2>
+        <p style="color: var(--text-muted);" id="mw-putaran-text"></p>
+        <h1 id="mw-nama" style="font-size: 2.5rem; color: var(--primary); margin: 15px 0 25px;"></h1>
+
+        <div id="mw-actions-pre" class="grid-2">
+            <button class="btn-primary" style="background: var(--text-muted);" onclick="undiUlang()">🔄 Undi Ulang</button>
+            <button class="btn-primary" onclick="simpanPemenang()">✅ Sahkan</button>
+        </div>
+        <button class="btn-wa" id="btn-wa-pemenang" style="display: none;" onclick="sharePemenangWA()">📱 Umumkan ke WA</button>
+    </div>
+</div>
+
+<!-- Modal Profil User -->
+<div class="modal" id="modal-profil" onclick="if(event.target===this) tutupModal()">
+    <div class="modal-content">
+        <h2 style="color: var(--primary); margin: 0 0 20px; text-align: center;">Profil Pengguna</h2>
+        <form id="form-profil">
+            <img id="up-foto-preview" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto 20px; display: block; border: 3px solid var(--border-color);" onerror="this.style.display='none'">
+            <div class="form-group"><label>Upload Foto Baru</label><input type="file" id="up-foto" accept="image/*"></div>
+            <div class="form-group"><label>Nama Tampilan</label><input type="text" id="up-nama" required></div>
+            <div class="form-group"><label>PIN Baru</label><input type="text" id="up-pin" required></div>
+            <button type="submit" class="btn-primary">Update Profil</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Theme
+    const toggleTheme = () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); };
+    if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
+    // Drawer
+    const toggleDrawer = () => {
+        if(window.innerWidth >= 768) return;
+        const d = document.getElementById('drawer'); const o = document.getElementById('drawer-overlay');
+        if(d.classList.contains('open')) { d.classList.remove('open'); o.style.opacity = '0'; setTimeout(() => o.style.display = 'none', 300); }
+        else { o.style.display = 'block'; setTimeout(() => { d.classList.add('open'); o.style.opacity = '1'; }, 10); }
+    };
+    const tutupModal = () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+
+    // Rupiah Formatter
+    const formatRupiahElem = (elId) => {
+        const el = document.getElementById(elId);
+        if(el) {
+            el.addEventListener('input', function(e) {
+                let val = this.value.replace(/[^,\d]/g, '');
+                this.value = val ? 'Rp ' + parseInt(val, 10).toLocaleString('id-ID') : '';
+            });
+        }
+    };
+    formatRupiahElem('mb-nominal-rp');
+
+    // Preview Foto
+    document.getElementById("up-foto").addEventListener("change", function() {
+        if(this.files && this.files[0]) {
+            const r = new FileReader(); r.onload = e => { document.getElementById("up-foto-preview").src = e.target.result; document.getElementById("up-foto-preview").style.display = 'block'; }; r.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // Custom Select Dropdown
+    window.toggleCS = (id) => {
+        document.querySelectorAll('.cs-dropdown').forEach(d => { if(d.parentElement.id !== id) d.classList.remove('open'); });
+        const drop = document.querySelector(`#${id} .cs-dropdown`); drop.classList.toggle('open');
+        if(drop.classList.contains('open')) document.querySelector(`#${id} .cs-search`).focus();
+    };
+    document.addEventListener('click', e => { if(!e.target.closest('.custom-select')) document.querySelectorAll('.cs-dropdown').forEach(d => d.classList.remove('open')); });
+
+    window.initCustomSelect = (id, dataObj, onChangeCallback) => {
+        const container = document.getElementById(id);
+        if(!container) return;
+        const inputVal = container.querySelector('input[type="hidden"]');
+        const dispText = container.querySelector('.cs-text');
+        const searchObj = container.querySelector('.cs-search');
+        const ulObj = container.querySelector('.cs-list');
+
+        const renderList = (filterText = '') => {
+            let html = '';
+            dataObj.forEach(item => { if(item.label.toLowerCase().includes(filterText.toLowerCase())) html += `<li data-val="${item.value}">${item.label}</li>`; });
+            ulObj.innerHTML = html || `<li style="color:gray; padding: 10px;">Tidak ditemukan</li>`;
+            ulObj.querySelectorAll('li[data-val]').forEach(li => {
+                li.onclick = () => {
+                    inputVal.value = li.getAttribute('data-val'); dispText.innerText = li.innerText;
+                    container.querySelector('.cs-dropdown').classList.remove('open');
+                    if(onChangeCallback) onChangeCallback();
+                };
+            });
+        };
+        renderList(); searchObj.onkeyup = (e) => renderList(e.target.value);
+        const initItem = dataObj.find(x => x.value === inputVal.value);
+        if(initItem) dispText.innerText = initItem.label;
+    };
+</script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
