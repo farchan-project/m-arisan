@@ -1,4 +1,4 @@
-const CACHE_NAME = 'marisan-emerald-v7';
+const CACHE_NAME = 'marisan-emerald-v8';
 const urlsToCache = ['./', './index.html', './app.js', './manifest.json', './logo.png'];
 
 self.addEventListener('install', event => {
